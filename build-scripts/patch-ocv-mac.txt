@@ -1,0 +1,49 @@
+diff --git a/cmake/OpenCVFindLibsGrfmt.cmake b/cmake/OpenCVFindLibsGrfmt.cmake
+index 04755c4c2c..be64c7d408 100644
+--- a/cmake/OpenCVFindLibsGrfmt.cmake
++++ b/cmake/OpenCVFindLibsGrfmt.cmake
+@@ -286,8 +286,12 @@ if(NOT HAVE_SPNG AND WITH_PNG)
+   if(BUILD_PNG)
+     ocv_clear_vars(PNG_FOUND)
+   else()
+-    ocv_clear_internal_cache_vars(PNG_LIBRARY PNG_INCLUDE_DIR)
+-    find_package(PNG QUIET)
++	ocv_clear_internal_cache_vars(PNG_LIBRARY PNG_INCLUDE_DIR)
++    find_package(PNG QUIET
++			#fix for multiple version issue!
++			NAMES libpng libpng16
++			NO_CMAKE_SYSTEM_PATH
++	)
+   endif()
+ 
+   if(NOT PNG_FOUND)
+@@ -295,10 +299,11 @@ if(NOT HAVE_SPNG AND WITH_PNG)
+ 
+     set(PNG_LIBRARY libpng CACHE INTERNAL "")
+     set(PNG_LIBRARIES ${PNG_LIBRARY})
+-    add_subdirectory("${OpenCV_SOURCE_DIR}/3rdparty/libpng")
++	add_subdirectory("${OpenCV_SOURCE_DIR}/3rdparty/libpng")
+     set(PNG_INCLUDE_DIR "${${PNG_LIBRARY}_SOURCE_DIR}" CACHE INTERNAL "")
+     set(PNG_DEFINITIONS "")
+     ocv_parse_header_version(PNG "${PNG_INCLUDE_DIR}/png.h" PNG_LIBPNG_VER_STRING)
++	message(STATUS "using png version from ${PNG_INCLUDE_DIR}: ${PNG_LIBPNG_VER_STRING}")
+   endif()
+ 
+   set(HAVE_PNG YES)
+diff --git a/platforms/ios/build_framework.py b/platforms/ios/build_framework.py
+index 1904a67ae7..156132f17f 100755
+--- a/platforms/ios/build_framework.py
++++ b/platforms/ios/build_framework.py
+@@ -110,6 +110,12 @@ class Builder:
+             dirs.append(main_build_dir)
+ 
+             cmake_flags = []
++
++            if 'PNG_LIBRARY' in os.environ and 'PNG_INCLUDE_DIR' in os.environ:
++                cmake_flags.append("-DBUILD_PNG=OFF")
++                cmake_flags.append("-DPNG_INCLUDE_DIR=%s"%os.environ['PNG_INCLUDE_DIR'])
++                cmake_flags.append("-DPNG_LIBRARY=%s"%os.environ['PNG_LIBRARY'])
++                cmake_flags.append("-DPNG_DIR=%s"%os.environ['PNG_DIR'])
+             if self.contrib:
+                 cmake_flags.append("-DOPENCV_EXTRA_MODULES_PATH=%s" % self.contrib)
+             if xcode_ver >= 7 and target[1] == 'iPhoneOS' and self.bitcodedisabled == False:
