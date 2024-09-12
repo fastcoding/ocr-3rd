@@ -15,4 +15,3 @@ python3 $OPENCV_SRC_FOLDER/platforms/android/build_sdk.py \
      --use_android_buildtools && \
 rm -rf ../android/opencv2 && \
 mv $bdir/OpenCV-android-sdk ../android/opencv2
-     
